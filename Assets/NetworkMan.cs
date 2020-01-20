@@ -57,9 +57,18 @@ public class NetworkMan : MonoBehaviour
     }
 
     [Serializable]
+    public struct receivedPos
+    {
+        public float x;
+        public float y;
+        public float z;
+    }
+
+    [Serializable]
     public class Player{
         public string id;
-        public receivedColor color;        
+        public receivedColor color;
+        public receivedPos pos;
     }
 
     [Serializable]
@@ -123,8 +132,7 @@ public class NetworkMan : MonoBehaviour
             foreach( var newPlayer in newPlayers )
             {
                 PlayerUnit player = Instantiate( playerPrefab );
-                Vector2 pos = UnityEngine.Random.insideUnitCircle * 4.0f;
-                player.transform.position = new Vector3( transform.position.x, 0, playerUnits.Count * 2 );
+                player.transform.position = new Vector3( newPlayer.pos.x, newPlayer.pos.y, newPlayer.pos.z );
                 player.id = newPlayer.id;
                 playerUnits.Add( newPlayer.id, player );
             }
@@ -140,6 +148,7 @@ public class NetworkMan : MonoBehaviour
                 if( playerUnits.ContainsKey( player.id ) )
                 {
                     Color newColor = new Color( player.color.R, player.color.G, player.color.B );
+                    playerUnits[player.id].transform.position = new Vector3(player.pos.x, player.pos.y, player.pos.z);
                     playerUnits[player.id].SetColor( newColor );
                 }
             }
