@@ -8,13 +8,20 @@ using System.Net;
 
 public class NetworkMan : MonoBehaviour
 {
+    public PlayerUnit playerPrefab;
+    Dictionary<string, PlayerUnit> playerUnits = new Dictionary<string, PlayerUnit>();
+    List<Player> newPlayers = new List<Player>();
+    List<Player> disconnectedPlayers = new List<Player>();
+
     public UdpClient udp;
+    public string serverIp = "18.222.93.164";
+    public int serverPort = 12345;
     // Start is called before the first frame update
     void Start()
     {
         udp = new UdpClient();
-        
-        udp.Connect("PUT_IP_ADDRESS_HERE",12345);
+
+        udp.Connect( serverIp, serverPort );
 
         Byte[] sendBytes = Encoding.ASCII.GetBytes("connect");
       
@@ -32,32 +39,38 @@ public class NetworkMan : MonoBehaviour
 
     public enum commands{
         NEW_CLIENT,
-        UPDATE
+        UPDATE,
+        CLIENT_DROPPED,
     };
     
     [Serializable]
     public class Message{
         public commands cmd;
     }
-    
+
+    [Serializable]
+    public struct receivedColor
+    {
+        public float R;
+        public float G;
+        public float B;
+    }
+
     [Serializable]
     public class Player{
         public string id;
-        public struct receivedColor{
-            public float R;
-            public float G;
-            public float B;
-        }
         public receivedColor color;        
     }
 
     [Serializable]
     public class NewPlayer{
-        
+        public commands cmd;
+        public Player player;
     }
 
     [Serializable]
     public class GameState{
+        public commands cmd;
         public Player[] players;
     }
 
@@ -81,9 +94,15 @@ public class NetworkMan : MonoBehaviour
         try{
             switch(latestMessage.cmd){
                 case commands.NEW_CLIENT:
+                    NewPlayer newPlayer = JsonUtility.FromJson<NewPlayer>( returnData );
+                    newPlayers.Add( newPlayer.player );
                     break;
                 case commands.UPDATE:
-                    lastestGameState = JsonUtility.FromJson<GameState>(returnData);
+                    lastestGameState = JsonUtility.FromJson<GameState>( returnData );
+                    break;
+                case commands.CLIENT_DROPPED:
+                    NewPlayer droppedPlayer = JsonUtility.FromJson<NewPlayer>( returnData );
+                    disconnectedPlayers.Add( droppedPlayer.player );
                     break;
                 default:
                     Debug.Log("Error");
@@ -98,16 +117,48 @@ public class NetworkMan : MonoBehaviour
         socket.BeginReceive(new AsyncCallback(OnReceived), socket);
     }
 
-    void SpawnPlayers(){
-
+    void SpawnPlayers(  ){
+        if( newPlayers.Count > 0 )
+        {
+            foreach( var newPlayer in newPlayers )
+            {
+                PlayerUnit player = Instantiate( playerPrefab );
+                Vector2 pos = UnityEngine.Random.insideUnitCircle * 4.0f;
+                player.transform.position = new Vector3( transform.position.x, 0, playerUnits.Count * 2 );
+                player.id = newPlayer.id;
+                playerUnits.Add( newPlayer.id, player );
+            }
+            newPlayers.Clear();
+        }
     }
 
     void UpdatePlayers(){
-
+        if( lastestGameState != null & lastestGameState.players.Length > 0 )
+        {
+            foreach( var player in lastestGameState.players )
+            {
+                if( playerUnits.ContainsKey( player.id ) )
+                {
+                    Color newColor = new Color( player.color.R, player.color.G, player.color.B );
+                    playerUnits[player.id].SetColor( newColor );
+                }
+            }
+        }
     }
 
     void DestroyPlayers(){
-
+        if( disconnectedPlayers.Count > 0 )
+        {
+            foreach( var droppedPlayer in disconnectedPlayers )
+            {
+                if( playerUnits.ContainsKey( droppedPlayer.id ) )
+                {
+                    Destroy( playerUnits[droppedPlayer.id].gameObject );
+                    playerUnits.Remove( droppedPlayer.id );
+                }
+            }
+            disconnectedPlayers.Clear();
+        }
     }
     
     void HeartBeat(){
