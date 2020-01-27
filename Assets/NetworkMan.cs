@@ -167,8 +167,10 @@ public class NetworkMan : MonoBehaviour
                 if( playerUnits.ContainsKey( player.id ) )
                 {
                     Color newColor = new Color( player.color.R, player.color.G, player.color.B );
-                    playerUnits[player.id].transform.position = new Vector3(player.pos.x, player.pos.y, player.pos.z);
                     playerUnits[player.id].SetColor( newColor );
+
+                    if( player.id != clientId )
+                        playerUnits[player.id].transform.position = new Vector3( player.pos.x, player.pos.y, player.pos.z );
                 }
             }
         }
