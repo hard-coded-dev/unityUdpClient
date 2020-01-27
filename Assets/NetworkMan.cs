@@ -16,6 +16,7 @@ public class NetworkMan : MonoBehaviour
     public UdpClient udp;
     public string serverIp = "18.222.93.164";
     public int serverPort = 12345;
+    string clientId;
     // Start is called before the first frame update
     void Start()
     {
@@ -23,7 +24,7 @@ public class NetworkMan : MonoBehaviour
 
         udp.Connect( serverIp, serverPort );
 
-        Byte[] sendBytes = Encoding.ASCII.GetBytes("connect");
+        Byte[] sendBytes = Encoding.ASCII.GetBytes("{\'message\':\'connect\'}");
       
         udp.Send(sendBytes, sendBytes.Length);
 
@@ -38,6 +39,7 @@ public class NetworkMan : MonoBehaviour
 
 
     public enum commands{
+        SERVER_CONNECTED,
         NEW_CLIENT,
         UPDATE,
         CLIENT_DROPPED,
@@ -72,6 +74,14 @@ public class NetworkMan : MonoBehaviour
     }
 
     [Serializable]
+    public class PlayerPacketData
+    {
+        public string id;
+        public string message;
+        public Vector3 pos;
+    }
+
+    [Serializable]
     public class NewPlayer{
         public commands cmd;
         public Player player;
@@ -102,10 +112,19 @@ public class NetworkMan : MonoBehaviour
         latestMessage = JsonUtility.FromJson<Message>(returnData);
         try{
             switch(latestMessage.cmd){
+                case commands.SERVER_CONNECTED:
+                    {
+                        NewPlayer newPlayer = JsonUtility.FromJson<NewPlayer>( returnData );
+                        clientId = newPlayer.player.id;
+                        newPlayers.Add( newPlayer.player );
+                        break;
+                    }
                 case commands.NEW_CLIENT:
-                    NewPlayer newPlayer = JsonUtility.FromJson<NewPlayer>( returnData );
-                    newPlayers.Add( newPlayer.player );
-                    break;
+                    {
+                        NewPlayer newPlayer = JsonUtility.FromJson<NewPlayer>( returnData );
+                        newPlayers.Add( newPlayer.player );
+                        break;
+                    }
                 case commands.UPDATE:
                     lastestGameState = JsonUtility.FromJson<GameState>( returnData );
                     break;
@@ -171,8 +190,17 @@ public class NetworkMan : MonoBehaviour
     }
     
     void HeartBeat(){
-        Byte[] sendBytes = Encoding.ASCII.GetBytes("heartbeat");
-        udp.Send(sendBytes, sendBytes.Length);
+
+        if( clientId != null )
+        {
+            PlayerPacketData data = new PlayerPacketData();
+            data.id = clientId;
+            data.message = "heartbeat";
+            data.pos = playerUnits[clientId].transform.position;
+            string message = JsonUtility.ToJson( data );
+            Byte[] sendBytes = Encoding.ASCII.GetBytes( message );
+            udp.Send( sendBytes, sendBytes.Length );
+        }
     }
 
     void Update(){
