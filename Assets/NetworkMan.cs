@@ -17,6 +17,8 @@ public class NetworkMan : MonoBehaviour
     public string serverIp = "18.222.93.164";
     public int serverPort = 12345;
     string clientId;
+
+    public float numUpdatePerSecond = 30.0f;
     // Start is called before the first frame update
     void Start()
     {
@@ -30,7 +32,7 @@ public class NetworkMan : MonoBehaviour
 
         udp.BeginReceive(new AsyncCallback(OnReceived), udp);
 
-        InvokeRepeating("HeartBeat", 1, 1);
+        InvokeRepeating("HeartBeat", 1.0f, 1.0f / numUpdatePerSecond );
     }
 
     void OnDestroy(){
@@ -152,7 +154,7 @@ public class NetworkMan : MonoBehaviour
             {
                 PlayerUnit player = Instantiate( playerPrefab );
                 player.transform.position = new Vector3( newPlayer.pos.x, newPlayer.pos.y, newPlayer.pos.z );
-                player.id = newPlayer.id;
+                player.SetId( newPlayer.id, clientId == newPlayer.id );
                 playerUnits.Add( newPlayer.id, player );
             }
             newPlayers.Clear();
