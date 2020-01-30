@@ -260,6 +260,7 @@ MonoBehaviour:
     type: 3}
   serverIp: 54.152.215.117
   serverPort: 12345
+  numUpdatePerSecond: 30
   latestMessage:
     cmd: 0
   lastestGameState:

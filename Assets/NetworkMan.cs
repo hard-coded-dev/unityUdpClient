@@ -69,10 +69,20 @@ public class NetworkMan : MonoBehaviour
     }
 
     [Serializable]
+    public struct receivedRotation
+    {
+        public float x;
+        public float y;
+        public float z;
+        public float w;
+    }
+
+    [Serializable]
     public class Player{
         public string id;
         public receivedColor color;
         public receivedPos pos;
+        public receivedRotation rotation;
     }
 
     [Serializable]
@@ -81,6 +91,7 @@ public class NetworkMan : MonoBehaviour
         public string id;
         public string message;
         public Vector3 pos;
+        public Quaternion rotation;
     }
 
     [Serializable]
@@ -172,7 +183,10 @@ public class NetworkMan : MonoBehaviour
                     playerUnits[player.id].SetColor( newColor );
 
                     if( player.id != clientId )
+                    {
                         playerUnits[player.id].transform.position = new Vector3( player.pos.x, player.pos.y, player.pos.z );
+                        playerUnits[player.id].transform.rotation = new Quaternion( player.rotation.x, player.rotation.y, player.rotation.z, player.rotation.w );
+                    }
                 }
             }
         }
@@ -201,6 +215,7 @@ public class NetworkMan : MonoBehaviour
             data.id = clientId;
             data.message = "heartbeat";
             data.pos = playerUnits[clientId].transform.position;
+            data.rotation = playerUnits[clientId].transform.rotation;
             string message = JsonUtility.ToJson( data );
             Byte[] sendBytes = Encoding.ASCII.GetBytes( message );
             udp.Send( sendBytes, sendBytes.Length );
