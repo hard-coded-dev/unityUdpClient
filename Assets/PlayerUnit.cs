@@ -12,7 +12,7 @@ public class PlayerUnit : MonoBehaviour
     Material material;
 
     public float moveSpeed = 1.0f;
-    public float angularSpeed = 40.0f;
+    public float angularSpeed = 60.0f;
 
     public void Awake()
     {
@@ -40,13 +40,12 @@ public class PlayerUnit : MonoBehaviour
             {
                 transform.position += transform.right * Time.deltaTime * moveSpeed;
             }
-            if( Input.GetKey( KeyCode.Q ) )
+
+            // mouse right drag
+            if( Input.GetMouseButton( 1 ) )
             {
-                transform.Rotate( Vector3.up, -Time.deltaTime * angularSpeed );
-            }
-            if( Input.GetKey( KeyCode.E ) )
-            {
-                transform.Rotate( Vector3.up, Time.deltaTime * angularSpeed );
+                float rotation = Input.GetAxis( "Mouse X" ) * angularSpeed;
+                transform.Rotate( Vector3.up, rotation );
             }
         }
         else

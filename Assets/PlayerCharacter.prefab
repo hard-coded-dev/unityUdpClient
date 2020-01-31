@@ -303,8 +303,8 @@ MonoBehaviour:
   clientIdText: {fileID: 4916211017691564305}
   isLocalPlayer: 0
   cameraSpot: {fileID: 7208469690519619746}
-  moveSpeed: 1
-  angularSpeed: 40
+  moveSpeed: 3
+  angularSpeed: 4
 --- !u!1 &7208469690519619746
 GameObject:
   m_ObjectHideFlags: 0
