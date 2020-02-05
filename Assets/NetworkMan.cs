@@ -14,7 +14,7 @@ public class NetworkMan : MonoBehaviour
     List<Player> disconnectedPlayers = new List<Player>();
 
     public UdpClient udp;
-    public string serverIp = "18.222.93.164";
+    public string serverIp = "3.219.69.41";
     public int serverPort = 12345;
     string clientId;
 
@@ -58,6 +58,11 @@ public class NetworkMan : MonoBehaviour
         public float R;
         public float G;
         public float B;
+
+        public static implicit operator Color( receivedColor value )
+        {
+            return new Color( value.R, value.G, value.B );
+        }
     }
 
     [Serializable]
@@ -66,6 +71,16 @@ public class NetworkMan : MonoBehaviour
         public float x;
         public float y;
         public float z;
+
+        public override string ToString()
+        {
+            return String.Format( "[ {0}, {1}, {2} ]", x, y, z );
+        }
+
+        public static implicit operator Vector3( receivedPos value )
+        {
+            return new Vector3( value.x, value.y, value.z );
+        }
     }
 
     [Serializable]
@@ -75,6 +90,11 @@ public class NetworkMan : MonoBehaviour
         public float y;
         public float z;
         public float w;
+
+        public static implicit operator Quaternion( receivedRotation value )
+        {
+            return new Quaternion( value.x, value.y, value.z, value.w );
+        }
     }
 
     [Serializable]
@@ -108,6 +128,13 @@ public class NetworkMan : MonoBehaviour
 
     public Message latestMessage;
     public GameState lastestGameState;
+
+    Dictionary<string, Player> prevPlayerData = new Dictionary<string, Player>();
+    GameState previousGameState = null;
+    float previousTime = 0;
+    float latestTime = 0;
+    float currentTime;
+    
     void OnReceived(IAsyncResult result){
         // this is what had been passed into BeginReceive as the second parameter:
         UdpClient socket = result.AsyncState as UdpClient;
@@ -139,6 +166,10 @@ public class NetworkMan : MonoBehaviour
                         break;
                     }
                 case commands.UPDATE:
+                    previousTime = latestTime;
+                    previousGameState = lastestGameState;
+
+                    latestTime = currentTime;
                     lastestGameState = JsonUtility.FromJson<GameState>( returnData );
                     break;
                 case commands.CLIENT_DROPPED:
@@ -179,13 +210,38 @@ public class NetworkMan : MonoBehaviour
             {
                 if( playerUnits.ContainsKey( player.id ) )
                 {
-                    Color newColor = new Color( player.color.R, player.color.G, player.color.B );
-                    playerUnits[player.id].SetColor( newColor );
+                    bool prevPlayerExist = false;
+                    Player prevPlayer = null;
+                    if( previousGameState != null )
+                    {
+                        prevPlayerExist = Array.Exists( previousGameState.players, p => p.id == player.id );
+                        prevPlayer = Array.Find( previousGameState.players, p => p.id == player.id );
+                    }
+
+                    playerUnits[player.id].SetColor( player.color );
 
                     if( player.id != clientId )
                     {
-                        playerUnits[player.id].transform.position = new Vector3( player.pos.x, player.pos.y, player.pos.z );
-                        playerUnits[player.id].transform.rotation = new Quaternion( player.rotation.x, player.rotation.y, player.rotation.z, player.rotation.w );
+                        Vector3 nextPos = player.pos;
+                        Quaternion nextRotation = player.rotation;
+                        if( CanvasManager.Instance.prediction.isOn )
+                        {
+
+                        }
+                        if( CanvasManager.Instance.reconciliation.isOn )
+                        {
+
+                        }
+                        if( CanvasManager.Instance.interpolation.isOn && prevPlayerExist )
+                        {
+                            float t = ( Time.time - latestTime ) / ( latestTime - previousTime );
+                            nextPos = Vector3.Lerp( prevPlayer.pos, player.pos, t );
+                            nextRotation = Quaternion.Lerp( prevPlayer.rotation, player.rotation, t );
+                            Debug.Log( String.Format( "Interpolate {0} to {1} by {2}, next = {3}", prevPlayer.pos, player.pos, t, nextPos ) );
+                        }
+
+                        playerUnits[player.id].transform.position = nextPos;
+                        playerUnits[player.id].transform.rotation = nextRotation;
                     }
                 }
             }
@@ -223,6 +279,7 @@ public class NetworkMan : MonoBehaviour
     }
 
     void Update(){
+        currentTime = Time.time;
         SpawnPlayers();
         UpdatePlayers();
         DestroyPlayers();
