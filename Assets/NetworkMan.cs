@@ -18,7 +18,19 @@ public class NetworkMan : MonoBehaviour
     public int serverPort = 12345;
     string clientId;
 
-    public float numUpdatePerSecond = 30.0f;
+    public float numUpdatePerSecond = 10.0f;
+    public float estimatedLag = 200.0f; // in mili seconds
+
+    public static NetworkMan Instance { get; private set; } = null;
+
+    private void Awake()
+    {
+        if( Instance != null && Instance != this )
+            Destroy( gameObject );
+        else
+            Instance = this;
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -224,10 +236,6 @@ public class NetworkMan : MonoBehaviour
                     {
                         Vector3 nextPos = player.pos;
                         Quaternion nextRotation = player.rotation;
-                        if( CanvasManager.Instance.prediction.isOn )
-                        {
-
-                        }
                         if( CanvasManager.Instance.reconciliation.isOn )
                         {
 

@@ -14,6 +14,8 @@ public class PlayerUnit : MonoBehaviour
     public float moveSpeed = 1.0f;
     public float angularSpeed = 60.0f;
 
+    public Transform delayedTransform;
+
     public void Awake()
     {
         var cubeRenderer = GetComponentInChildren<Renderer>();
@@ -24,28 +26,39 @@ public class PlayerUnit : MonoBehaviour
     {
         if( isLocalPlayer )
         {
+            Transform curTransform = transform;
             if( Input.GetKey( KeyCode.W ) )
             {
-                transform.position += transform.forward * Time.deltaTime * moveSpeed;
+                curTransform.position += curTransform.forward * Time.deltaTime * moveSpeed;
             }
             if( Input.GetKey( KeyCode.S ) )
             {
-                transform.position -= transform.forward * Time.deltaTime * moveSpeed;
+                curTransform.position -= curTransform.forward * Time.deltaTime * moveSpeed;
             }
             if( Input.GetKey( KeyCode.A ) )
             {
-                transform.position -= transform.right * Time.deltaTime * moveSpeed;
+                curTransform.position -= curTransform.right * Time.deltaTime * moveSpeed;
             }
             if( Input.GetKey( KeyCode.D ) )
             {
-                transform.position += transform.right * Time.deltaTime * moveSpeed;
+                curTransform.position += curTransform.right * Time.deltaTime * moveSpeed;
             }
 
             // mouse right drag
             if( Input.GetMouseButton( 1 ) )
             {
                 float rotation = Input.GetAxis( "Mouse X" ) * angularSpeed;
-                transform.Rotate( Vector3.up, rotation );
+                curTransform.Rotate( Vector3.up, rotation );
+            }
+
+            if( CanvasManager.Instance.prediction.isOn )
+            {
+                StartCoroutine( UpdateTransform( curTransform, NetworkMan.Instance.estimatedLag ) );
+            }
+            else
+            {
+                transform.position = curTransform.position;
+                transform.rotation = curTransform.rotation;
             }
         }
         else
@@ -70,6 +83,13 @@ public class PlayerUnit : MonoBehaviour
             Camera.main.transform.localPosition = Vector3.zero;
             Camera.main.transform.localRotation = Quaternion.identity;
         }
+    }
+
+    IEnumerator UpdateTransform( Transform newTransform, float waittingTime )
+    {
+        yield return new WaitForSeconds( waittingTime );
+        transform.position = newTransform.position;
+        transform.rotation = newTransform.rotation;
     }
 
     public void SetColor( Color color )

@@ -2,12 +2,14 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using TMPro;
 
 public class CanvasManager : MonoBehaviour
 {
     public Toggle prediction;
     public Toggle reconciliation;
     public Toggle interpolation;
+    public TMP_InputField lagTimeField;
     public static CanvasManager Instance { get; private set; } = null;
 
     private void Awake()
@@ -16,5 +18,15 @@ public class CanvasManager : MonoBehaviour
             Destroy( gameObject );
         else
             Instance = this;
+    }
+
+    public void OnLagChanged()
+    {
+        float newLag;
+        if( float.TryParse( lagTimeField.text, out newLag ) )
+        {
+            NetworkMan.Instance.estimatedLag = newLag;
+        }
+        
     }
 }
