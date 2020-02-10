@@ -14,9 +14,9 @@ public class Bullet : MonoBehaviour
         {
             PlayerUnit targetUnit = other.GetComponent<PlayerUnit>();
             // take a damage only if the own client gets hit
-            if( targetUnit != null && ownerId != targetUnit.id && NetworkMan.Instance.clientId == targetUnit.id )
+            if( targetUnit != null && ownerId != targetUnit.id )
             {
-                // targetUnit.TakeDamage( damage );
+                targetUnit.TakeDamage( damage );
                 Destroy( gameObject );
             }
         }
@@ -25,6 +25,6 @@ public class Bullet : MonoBehaviour
     public void Fire()
     {
         GetComponent<Rigidbody>().AddForce( transform.forward * speed, ForceMode.Impulse );
-
+        Destroy(gameObject, 5.0f);
     }
 }

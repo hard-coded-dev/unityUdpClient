@@ -20,6 +20,11 @@ public class CanvasManager : MonoBehaviour
             Instance = this;
     }
 
+    void Start()
+    {
+        interpolation.isOn = true;
+    }
+
     public void OnLagChanged()
     {
         float newLag;

@@ -12,6 +12,7 @@ public class NetworkMan : MonoBehaviour
     Dictionary<string, PlayerUnit> playerUnits = new Dictionary<string, PlayerUnit>();
     List<Player> newPlayers = new List<Player>();
     List<Player> disconnectedPlayers = new List<Player>();
+    List<PlayerPacketData> currentPlayers;
 
     public UdpClient udp;
     public string serverIp = "3.219.69.41";
@@ -57,6 +58,7 @@ public class NetworkMan : MonoBehaviour
         NEW_CLIENT,
         UPDATE,
         CLIENT_DROPPED,
+        CLIENT_FIRE,
     };
     
     [Serializable]
@@ -124,6 +126,8 @@ public class NetworkMan : MonoBehaviour
         public string message;
         public Vector3 pos;
         public Quaternion rotation;
+
+        public float health;
     }
 
     [Serializable]
@@ -273,16 +277,33 @@ public class NetworkMan : MonoBehaviour
     
     void HeartBeat(){
 
-        if( clientId != null )
+        if( clientId != null && playerUnits[clientId].IsAlive )
         {
             PlayerPacketData data = new PlayerPacketData();
             data.id = clientId;
             data.message = "heartbeat";
             data.pos = playerUnits[clientId].transform.position;
             data.rotation = playerUnits[clientId].transform.rotation;
-            string message = JsonUtility.ToJson( data );
-            Byte[] sendBytes = Encoding.ASCII.GetBytes( message );
+            data.health = playerUnits[clientId].currentHealth;
+            string messageData = JsonUtility.ToJson( data );
+            Byte[] sendBytes = Encoding.ASCII.GetBytes(messageData);
             udp.Send( sendBytes, sendBytes.Length );
+        }
+    }
+
+    public void SendAction( string message, Transform clientTransform )
+    {
+        if (clientId != null )
+        {
+            PlayerPacketData data = new PlayerPacketData();
+            data.id = clientId;
+            data.message = message;
+            data.pos = clientTransform.position;
+            data.rotation = clientTransform.rotation;
+            string messageData = JsonUtility.ToJson(data);
+
+            Byte[] sendBytes = Encoding.ASCII.GetBytes(messageData);
+            udp.Send(sendBytes, sendBytes.Length);
         }
     }
 

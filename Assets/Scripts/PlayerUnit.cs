@@ -1,12 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 using TMPro;
 
 public class PlayerUnit : MonoBehaviour
 {
     public string id;
-    public TextMeshProUGUI clientIdText;
+    
     public bool isLocalPlayer;
     public GameObject cameraSpot;
     Material material;
@@ -14,6 +15,7 @@ public class PlayerUnit : MonoBehaviour
     public float moveSpeed = 1.0f;
     public float angularSpeed = 60.0f;
 
+    public Transform revTransform;
     public Transform delayedTransform;
 
     /// <summary>
@@ -27,6 +29,13 @@ public class PlayerUnit : MonoBehaviour
     /// </summary>
     public float currentHealth;
     public float maxHealth = 100;
+    public bool IsAlive { get { return currentHealth > 0; } }
+
+    /// <summary>
+    /// UI features
+    /// </summary>
+    public TextMeshProUGUI clientIdText;
+    public Slider healthBar;
 
     public void Awake()
     {
@@ -37,6 +46,7 @@ public class PlayerUnit : MonoBehaviour
     private void Start()
     {
         currentHealth = maxHealth;
+        healthBar.value = 1.0f;
     }
 
     public void Update()
@@ -120,17 +130,27 @@ public class PlayerUnit : MonoBehaviour
 
     void FireBullet()
     {
-        Bullet bullet = Instantiate( bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation );
+        Bullet bullet = Instantiate(bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation);
         bullet.ownerId = id;
         bullet.Fire();
+        //NetworkMan.Instance.SendAction("fire", bulletSpawnerTransform );
     }
 
     public void TakeDamage( float damage )
     {
         currentHealth = Mathf.Max( currentHealth - damage, 0.0f );
-        if( currentHealth <= 0 )
+        healthBar.value = currentHealth / maxHealth;
+        if ( currentHealth <= 0 )
         {
-            //Die();
+            StartCoroutine(Die());
+            Debug.Log("Player Die");
         }
+    }
+
+    IEnumerator Die()
+    {
+        gameObject.SetActive(false);
+        yield return new WaitForSeconds(1.0f);
+        Destroy(gameObject);
     }
 }
