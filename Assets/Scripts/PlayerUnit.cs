@@ -23,6 +23,8 @@ public class PlayerUnit : MonoBehaviour
     /// </summary>
     public Transform bulletSpawnerTransform;
     public Bullet bulletPrefab;
+    public float weaponCooldown = 0.5f;
+    public float cooldownTime;
 
     /// <summary>
     /// player properties
@@ -49,7 +51,7 @@ public class PlayerUnit : MonoBehaviour
         healthBar.value = 1.0f;
     }
 
-    public void Update()
+    public void FixedUpdate()
     {
         if( isLocalPlayer )
         {
@@ -97,6 +99,11 @@ public class PlayerUnit : MonoBehaviour
         {
             clientIdText.transform.rotation = Camera.main.transform.rotation;
         }
+
+        if( cooldownTime > 0.0f )
+        {
+            cooldownTime -= Time.fixedDeltaTime;
+        }
     }
 
     public void SetId( string clientId, bool isLocal )
@@ -131,9 +138,13 @@ public class PlayerUnit : MonoBehaviour
 
     public void FireBullet()
     {
-        Bullet bullet = Instantiate(bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation);
-        bullet.ownerId = id;
-        bullet.Fire();
+        if( cooldownTime <= 0.0f )
+        {
+            Bullet bullet = Instantiate( bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation );
+            bullet.ownerId = id;
+            bullet.Fire();
+            cooldownTime = weaponCooldown; 
+        }
         //NetworkMan.Instance.SendAction("fire", bulletSpawnerTransform );
     }
 
