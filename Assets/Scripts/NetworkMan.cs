@@ -16,7 +16,7 @@ public class NetworkMan : MonoBehaviour
     public UdpClient udp;
     public string serverIp = "3.219.69.41";
     public int serverPort = 12345;
-    string clientId;
+    public string clientId;
 
     public float numUpdatePerSecond = 10.0f;
     public float estimatedLag = 200.0f; // in mili seconds

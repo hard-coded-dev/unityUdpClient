@@ -16,10 +16,27 @@ public class PlayerUnit : MonoBehaviour
 
     public Transform delayedTransform;
 
+    /// <summary>
+    /// projectile variables
+    /// </summary>
+    public Transform bulletSpawnerTransform;
+    public Bullet bulletPrefab;
+
+    /// <summary>
+    /// player properties
+    /// </summary>
+    public float currentHealth;
+    public float maxHealth = 100;
+
     public void Awake()
     {
         var cubeRenderer = GetComponentInChildren<Renderer>();
         material = cubeRenderer.material;
+    }
+
+    private void Start()
+    {
+        currentHealth = maxHealth;
     }
 
     public void Update()
@@ -42,6 +59,10 @@ public class PlayerUnit : MonoBehaviour
             if( Input.GetKey( KeyCode.D ) )
             {
                 curTransform.position += curTransform.right * Time.deltaTime * moveSpeed;
+            }
+            if( Input.GetKeyUp( KeyCode.Space ))
+            {
+                FireBullet();
             }
 
             // mouse right drag
@@ -95,5 +116,21 @@ public class PlayerUnit : MonoBehaviour
     public void SetColor( Color color )
     {
         material.SetColor( "_Color", color );
+    }
+
+    void FireBullet()
+    {
+        Bullet bullet = Instantiate( bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation );
+        bullet.ownerId = id;
+        bullet.Fire();
+    }
+
+    public void TakeDamage( float damage )
+    {
+        currentHealth = Mathf.Max( currentHealth - damage, 0.0f );
+        if( currentHealth <= 0 )
+        {
+            //Die();
+        }
     }
 }
