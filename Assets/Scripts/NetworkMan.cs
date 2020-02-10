@@ -117,6 +117,8 @@ public class NetworkMan : MonoBehaviour
         public receivedColor color;
         public receivedPos pos;
         public receivedRotation rotation;
+        public float health;
+        public string action;
     }
 
     [Serializable]
@@ -254,6 +256,11 @@ public class NetworkMan : MonoBehaviour
 
                         playerUnits[player.id].transform.position = nextPos;
                         playerUnits[player.id].transform.rotation = nextRotation;
+                        playerUnits[player.id].SetHealth(player.health);
+                    }
+                    if( player.action == "fire" )
+                    {
+                        playerUnits[player.id].FireBullet();
                     }
                 }
             }
@@ -281,7 +288,6 @@ public class NetworkMan : MonoBehaviour
         {
             PlayerPacketData data = new PlayerPacketData();
             data.id = clientId;
-            data.message = "heartbeat";
             data.pos = playerUnits[clientId].transform.position;
             data.rotation = playerUnits[clientId].transform.rotation;
             data.health = playerUnits[clientId].currentHealth;
@@ -298,8 +304,6 @@ public class NetworkMan : MonoBehaviour
             PlayerPacketData data = new PlayerPacketData();
             data.id = clientId;
             data.message = message;
-            data.pos = clientTransform.position;
-            data.rotation = clientTransform.rotation;
             string messageData = JsonUtility.ToJson(data);
 
             Byte[] sendBytes = Encoding.ASCII.GetBytes(messageData);

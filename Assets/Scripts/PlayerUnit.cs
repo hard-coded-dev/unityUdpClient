@@ -72,7 +72,8 @@ public class PlayerUnit : MonoBehaviour
             }
             if( Input.GetKeyUp( KeyCode.Space ))
             {
-                FireBullet();
+                NetworkMan.Instance.SendAction("fire", bulletSpawnerTransform );
+                //FireBullet();
             }
 
             // mouse right drag
@@ -128,7 +129,7 @@ public class PlayerUnit : MonoBehaviour
         material.SetColor( "_Color", color );
     }
 
-    void FireBullet()
+    public void FireBullet()
     {
         Bullet bullet = Instantiate(bulletPrefab, bulletSpawnerTransform.position, bulletSpawnerTransform.rotation);
         bullet.ownerId = id;
@@ -139,8 +140,14 @@ public class PlayerUnit : MonoBehaviour
     public void TakeDamage( float damage )
     {
         currentHealth = Mathf.Max( currentHealth - damage, 0.0f );
+        SetHealth(currentHealth);
+    }
+
+    public void SetHealth( float health )
+    {
+        currentHealth = health;
         healthBar.value = currentHealth / maxHealth;
-        if ( currentHealth <= 0 )
+        if (currentHealth <= 0)
         {
             StartCoroutine(Die());
             Debug.Log("Player Die");
