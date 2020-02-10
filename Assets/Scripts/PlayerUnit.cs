@@ -160,7 +160,7 @@ public class PlayerUnit : MonoBehaviour
         healthBar.value = currentHealth / maxHealth;
         if (currentHealth <= 0)
         {
-            StartCoroutine(Die());
+            //StartCoroutine(Die());
             Debug.Log("Player Die");
         }
     }
@@ -169,6 +169,6 @@ public class PlayerUnit : MonoBehaviour
     {
         gameObject.SetActive(false);
         yield return new WaitForSeconds(1.0f);
-        Destroy(gameObject);
+        //Destroy(gameObject);
     }
 }
